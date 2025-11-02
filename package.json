@@ -1,0 +1,40 @@
+{
+  "name": "pharma-app-web",
+  "version": "1.0.0",
+  "description": "A billing and inventory management application.",
+  "author": {
+    "name": "SURESH KRISHNA R",
+    "email": "sureshkrishnar05@gmail.com"
+  },
+  "homepage": "./",
+  "main": "main.js",
+  "scripts": {
+    "start": "vite",
+    "server": "node main.js",
+    "dev": "concurrently \"npm run start\" \"npm run server\"",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.1.2",
+    "body-parser": "^1.20.2",
+    "express": "^4.19.2",
+    "number-to-words": "^1.2.4",
+    "pdfkit": "^0.15.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.3",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.7",
+    "open": "^10.1.0",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.4",
+    "vite": "^5.3.3"
+  }
+}
