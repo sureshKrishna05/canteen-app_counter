@@ -33,9 +33,8 @@ Build outputs will be available under `dist/`.
 ## 📂 Project Structure  
 
 ```
-billing-app/
-├── main.js                # Express backend API server entry point
-├── data/                  # Contains DB file
+CanteenApp/
+├── main.js               
 ├── dist/                  # Build output directory (created by `npm run build`)
 ├── src/
 │   ├── components/        # Reusable React components
