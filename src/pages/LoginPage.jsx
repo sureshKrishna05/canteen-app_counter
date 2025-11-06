@@ -2,10 +2,6 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import bgImage from "../assets/login-bg.jpg";
 import logo from "../assets/Logo.jpg";
-// No more lucide-react import
-
-// NOTE: All layout code (background, logo, etc.) is now in this one file.
-// No more AuthLayout.jsx.
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -26,8 +22,6 @@ const LoginPage = () => {
     setError("");
     setLoading(true); // Start loading
 
-    // --- FAKE LOGIN ---
-    // Replace this with your actual Firebase login logic
     console.log("Attempting login with:", email);
     setTimeout(() => {
       if (email === "test@test.com" && password === "password") {
@@ -150,7 +144,7 @@ const LoginPage = () => {
             className="flex w-full items-center justify-center rounded-md bg-orange-500 py-2.5 font-semibold text-white shadow-md transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loading ? (
-              // This is the new Tailwind spinner
+
               <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
             ) : (
               "Login"

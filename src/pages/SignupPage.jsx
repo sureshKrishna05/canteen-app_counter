@@ -2,12 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import bgImage from "../assets/login-bg.jpg";
 import logo from "../assets/Logo.jpg";
-// No lucide-react import
 
-// NOTE: All layout code (background, logo, etc.) is now in this one file.
-// No more AuthLayout.jsx.
-
-// --- VerificationInput component (local to this file) ---
 const VerificationInput = ({ length = 6, onVerify }) => {
   const [code, setCode] = useState(Array(length).fill(""));
   const [verified, setVerified] = useState(false);
@@ -21,7 +16,7 @@ const VerificationInput = ({ length = 6, onVerify }) => {
     if (value && index < length - 1) inputsRef.current[index + 1].focus();
 
     const joined = updated.join("");
-    // --- FAKE OTP ---
+    // --- FAKE OTP --
     // Replace "123456" with your real OTP logic
     if (joined.length === length && joined === "123456") {
       setVerified(true);
@@ -92,7 +87,6 @@ const SignupPage = () => {
     setLoading(true);
 
     // --- FAKE SIGNUP & OTP ---
-    // Replace this with your actual Firebase logic
     // (e.g., send OTP, then show verification)
     console.log("Sending OTP to:", email);
     setTimeout(() => {
@@ -232,7 +226,6 @@ const SignupPage = () => {
               className="flex w-full items-center justify-center rounded-md bg-orange-500 py-2 font-semibold text-white shadow-md transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {loading ? (
-                // This is the new Tailwind spinner
                 <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
               ) : (
                 "Send Verification Code"
@@ -262,7 +255,6 @@ const SignupPage = () => {
                 className="flex w-full items-center justify-center rounded-md bg-orange-500 px-4 py-2 font-semibold text-white shadow-md hover:bg-orange-600 disabled:opacity-70"
               >
                  {loading ? (
-                  // This is the new Tailwind spinner
                   <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
                 ) : (
                   "Resend Code"
