@@ -2,37 +2,64 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import bgImage from "../assets/login-bg.jpg";
 import logo from "../assets/Logo.jpg";
+import { login, logout } from "../database/firestoreService"; // <-- IMPORT REAL FUNCTIONS
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false); // For loading state
+  const [loading, setLoading] = useState(false);
 
   const [showAbout, setShowAbout] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  // --- THIS IS THE UPDATED FIREBASE LOGIN LOGIC ---
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) {
       setError("Please enter both email and password.");
       return;
     }
     setError("");
-    setLoading(true); // Start loading
+    setLoading(true);
 
-    console.log("Attempting login with:", email);
-    setTimeout(() => {
-      if (email === "test@test.com" && password === "password") {
-        console.log("Login successful!");
-        // navigate("/dashboard"); // Uncomment this on success
-      } else {
-        setError("Invalid credentials. Please try again.");
+    console.log("Attempting login with:", email); // Good for debugging
+
+    // --- REAL FIREBASE LOGIN ---
+    try {
+      const userCredential = await login(email, password);
+      const user = userCredential.user;
+
+      // --- !! VERIFICATION CHECK !! ---
+      if (!user.emailVerified) {
+        // If not verified, log them out immediately and show an error.
+        await logout();
+        setError(
+          "Your email is not verified. Please check your inbox for the link."
+        );
       }
+      // If email IS verified, we do nothing.
+      // The onAuthStateChanged listener in AuthContext
+      // and the router in App.jsx will handle the redirect.
+      
+    } catch (err) {
+      // Handle Firebase errors
+      if (
+        err.code === "auth/wrong-password" ||
+        err.code === "auth/user-not-found" ||
+        err.code === "auth/invalid-credential"
+      ) {
+        setError("Invalid credentials. Please try again.");
+      } else {
+        setError("Failed to log in. Please try again later.");
+      }
+      console.error("Login error:", err.code, err.message);
+    } finally {
       setLoading(false); // Stop loading
-    }, 1500); // Simulate a 1.5 second network request
+    }
   };
+  // --- END OF UPDATED LOGIC ---
 
   return (
     <div
@@ -76,9 +103,7 @@ const LoginPage = () => {
       {showAbout && (
         <div className="absolute right-8 top-20 z-10 w-80 rounded-xl bg-white/95 p-5 text-sm text-gray-800 shadow-xl backdrop-blur-sm">
           <h3 className="mt-0 text-lg font-semibold text-orange-600">About Us</h3>
-          <p>
-            Our Smart Canteen App provides a seamless dining experience.
-          </p>
+          <p>Our Smart Canteen App provides a seamless dining experience.</p>
         </div>
       )}
 
@@ -92,7 +117,7 @@ const LoginPage = () => {
               href="mailto:smartcanteen29@gmail.com"
               className="font-bold text-orange-600 no-underline"
             >
-              smartcanteen29@gmail.com
+              smartcanteen2Example.com
             </a>
           </p>
         </div>
@@ -127,7 +152,7 @@ const LoginPage = () => {
               className="w-full rounded-md border-2 border-orange-400 px-3 py-2 outline-none transition-all focus:ring-2 focus:ring-orange-300 disabled:opacity-50"
             />
           </div>
-          
+
           {error && (
             <p className="text-center text-sm font-medium text-red-600">{error}</p>
           )}
@@ -144,7 +169,6 @@ const LoginPage = () => {
             className="flex w-full items-center justify-center rounded-md bg-orange-500 py-2.5 font-semibold text-white shadow-md transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loading ? (
-
               <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white"></div>
             ) : (
               "Login"
