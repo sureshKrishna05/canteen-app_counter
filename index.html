@@ -2,14 +2,25 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <!-- Added for mobile responsiveness -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <!--
-      The Content-Security-Policy has been updated.
-      - 'self' allows loading resources from the same origin (localhost:3300).
-      - data: allows for data URIs, which can be useful for images or other assets.
-      - http://localhost:3300 explicitly allows connections to your backend server.
+      UPDATED Content-Security-Policy:
+      - 'self' allows loading resources from your own domain.
+      - 'http://localhost:5173' allows connecting to your Vite dev server.
+      - 'https://*.googleapis.com' and 'https://www.googleapis.com' are REQUIRED for Firebase Authentication.
+      - 'unsafe-inline' is kept for styles (Tailwind needs this in dev).
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://localhost:3300; style-src 'self' 'unsafe-inline'; script-src 'self';">
-    <title>Pharma App</title>
+    <meta 
+      http-equiv="Content-Security-Policy" 
+      content="default-src 'self'; 
+               connect-src 'self' http://localhost:5173 https://*.googleapis.com https://www.googleapis.com; 
+               style-src 'self' 'unsafe-inline'; 
+               script-src 'self';"
+    >
+    <!-- Updated title -->
+    <title>Canteen Counter App</title>
   </head>
   <body>
     <div id="root"></div>
