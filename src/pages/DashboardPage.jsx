@@ -1,6 +1,7 @@
 import React from "react";
 import { logout } from "../database/firestoreService";
 import { useNavigate } from "react-router-dom";
+import HeaderBar from "../components/HeaderBar";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -23,58 +24,59 @@ const DashboardPage = () => {
     { emoji: "🔔", title: "Notifications", desc: "View alerts and recent updates" },
   ];
 
+  // ---------------------------------------
+  // Navigation Handler using SWITCH-CASE
+  // ---------------------------------------
+  const handleNavigation = (title) => {
+    switch (title) {
+      case "Orders":
+        navigate("/orders");
+        break;
+
+      case "Processing Orders":
+        alert("Processing Orders page not created yet.");
+        break;
+
+      case "Ready Orders":
+        alert("Ready Orders page not created yet.");
+        break;
+
+      case "Delivered Orders":
+        alert("Delivered Orders page not created yet.");
+        break;
+
+      case "Today’s Menu":
+        alert("Menu Management page not created yet.");
+        break;
+
+      case "Notifications":
+        alert("Notifications page not created yet.");
+        break;
+
+      default:
+        console.warn("Unknown dashboard box clicked:", title);
+    }
+  };
+
   return (
-    <div
-      className="p-6 flex flex-col gap-6 min-h-screen"
-      style={{
-        background: "#FFB86C",
-        color: "#1F2937",
-      }}
-    >
-      {/* Glass-like title bar */}
-      <header
-        className="flex items-center justify-between p-4 rounded-xl shadow-lg relative overflow-hidden"
-        style={{
-          background: "rgba(255, 255, 255, 0.15)",
-          backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.3)",
-        }}
-      >
-        {/* Shine effect (static, no animation) */}
-        <div
-          className="absolute top-0 left-0 w-full h-full pointer-events-none"
-          style={{
-            background:
-              "linear-gradient(120deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0.25) 100%)",
-            transform: "skewX(-20deg)",
-          }}
-        />
+    <div className="p-6 flex flex-col gap-6 min-h-screen">
 
-        <h1 className="text-2xl font-extrabold text-white drop-shadow-lg flex items-center gap-2 relative z-10">
-          🍴 <span>Canteen Dashboard</span>
-        </h1>
+      {/* Glass Header */}
+        <HeaderBar title="Canteen Dashboard" icon="🍴" actionType="LogOut" />
 
-        <button
-          onClick={handleLogout}
-          className="relative z-10 rounded-md bg-gradient-to-r from-orange-500 to-orange-400 px-5 py-2 font-semibold text-white shadow-md hover:shadow-lg active:scale-95 transition"
-        >
-          Log Out
-        </button>
-      </header>
-
-      {/* Dashboard Sections */}
+      {/* Dashboard Boxes */}
       <main className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {boxes.map((box, idx) => (
           <div
             key={idx}
-            className="relative h-52 rounded-2xl flex flex-col items-center justify-center text-center overflow-hidden transform transition hover:scale-105 hover:shadow-2xl"
+            onClick={() => handleNavigation(box.title)}
+            className="relative h-52 rounded-2xl flex flex-col items-center justify-center text-center overflow-hidden transform transition hover:scale-105 hover:shadow-2xl cursor-pointer"
             style={{
               background: "linear-gradient(135deg, #FFF7ED, #FFD4A5)",
               border: "3px solid #8B0000",
               boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
             }}
           >
-            {/* Static light frame */}
             <div
               className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-36 h-3 rounded-full blur-lg opacity-70"
               style={{
