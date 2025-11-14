@@ -48,11 +48,6 @@ const OrdersPage = () => {
       {/* 🔥 Uniform glass header */}
       <HeaderBar title="Orders" icon="📦" actionType="Back" />
 
-      {/* Orders grid */}
-      <h2 className="text-xl font-semibold text-white mb-4">
-        Pending Orders
-      </h2>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {orders.map((order) => (
           <div
