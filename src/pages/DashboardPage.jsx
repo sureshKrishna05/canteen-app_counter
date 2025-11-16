@@ -34,15 +34,15 @@ const DashboardPage = () => {
         break;
 
       case "Processing Orders":
-        alert("Processing Orders page not created yet.");
+        navigate("/processing");
         break;
 
       case "Ready Orders":
-        alert("Ready Orders page not created yet.");
+        navigate("/ready");
         break;
 
       case "Delivered Orders":
-        alert("Delivered Orders page not created yet.");
+        navigate("/delivered");
         break;
 
       case "Today’s Menu":
