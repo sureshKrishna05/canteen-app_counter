@@ -24,6 +24,40 @@ const DashboardPage = () => {
     { emoji: "🔔", title: "Notifications", desc: "View alerts and recent updates" },
   ];
 
+  // ---------------------------------------
+  // Navigation Handler using SWITCH-CASE
+  // ---------------------------------------
+  const handleNavigation = (title) => {
+    switch (title) {
+      case "Orders":
+        navigate("/orders");
+        break;
+
+      case "Processing Orders":
+        navigate("/processing");
+        break;
+
+      case "Ready Orders":
+        navigate("/ready");
+        break;
+
+      case "Delivered Orders":
+        navigate("/delivered");
+        break;
+
+      case "Today’s Menu":
+        alert("Menu Management page not created yet.");
+        break;
+
+      case "Notifications":
+        alert("Notifications page not created yet.");
+        break;
+
+      default:
+        console.warn("Unknown dashboard box clicked:", title);
+    }
+  };
+
   return (
     <div
       className="p-6 flex flex-col gap-6 min-h-screen"
