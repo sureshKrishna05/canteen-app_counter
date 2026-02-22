@@ -15,10 +15,10 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.97.0",
     "better-sqlite3": "^11.1.2",
     "body-parser": "^1.20.2",
     "express": "^4.19.2",
-    "firebase": "^12.5.0",
     "framer-motion": "^12.23.24",
     "number-to-words": "^1.2.4",
     "pdfkit": "^0.15.2",

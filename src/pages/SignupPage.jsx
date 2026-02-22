@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import bgImage from "../assets/login-bg.jpg";
 import logo from "../assets/Logo.jpg";
-import { signup, sendVerificationEmail } from "../database/firestoreService"; // <-- IMPORT REAL FUNCTIONS
+// 🟢 IMPORT REAL SUPABASE FUNCTION
+import { signup } from "../database/supabaseService"; 
 
-// --- SignupPage component ---
 const SignupPage = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -12,7 +12,7 @@ const SignupPage = () => {
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [verificationActive, setVerificationActive] = useState(false); // We'll reuse this to show the "Check Email" message
+  const [verificationActive, setVerificationActive] = useState(false);
 
   const [showAbout, setShowAbout] = useState(false);
   const [showContact, setShowContact] = useState(false);
@@ -30,33 +30,27 @@ const SignupPage = () => {
     setError("");
     setLoading(true);
 
-    // --- REAL FIREBASE SIGNUP & VERIFICATION ---
     try {
-      // Step 1: Create the user in Firebase Auth
+      // 🟢 REAL SUPABASE SIGNUP (Automatically sends verification email/OTP)
       await signup(email, password);
-
-      // Step 2: Send the verification email to the new user
-      // (The user is now auth.currentUser)
-      await sendVerificationEmail();
-
-      // Step 3: Show the "Check your email" message
-      setVerificationActive(true); // This hides the form
+      
+      // Hide the form and show the "Check your email" success message
+      setVerificationActive(true); 
     } catch (err) {
-      // Handle Firebase errors
-      if (err.code === "auth/email-already-in-use") {
+      // Safely handle Supabase errors
+      if (err.message?.includes("already registered")) {
         setError("This email is already in use.");
-      } else if (err.code === "auth/weak-password") {
+      } else if (err.message?.includes("Password should be at least")) {
         setError("Password should be at least 6 characters.");
       } else {
-        setError("Failed to create account. Please try again.");
+        setError(err.message || "Failed to create account. Please try again.");
       }
-      console.error("Signup error:", err.code, err.message);
+      console.error("Signup error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // ... (Layout code: div, img, buttons, about/contact boxes are all identical) ...
   return (
     <div
       style={{ backgroundImage: `url(${bgImage})` }}
@@ -89,12 +83,14 @@ const SignupPage = () => {
           Contact Us
         </button>
       </div>
+
       {showAbout && (
         <div className="absolute right-8 top-20 z-10 w-80 rounded-xl bg-white/95 p-5 text-sm text-gray-800 shadow-xl backdrop-blur-sm">
           <h3 className="mt-0 text-lg font-semibold text-orange-600">About Us</h3>
           <p>Our Smart Canteen App provides a seamless dining experience.</p>
         </div>
       )}
+
       {showContact && (
         <div className="absolute right-8 top-20 z-10 w-72 rounded-xl bg-white/95 p-5 text-sm text-gray-800 shadow-xl backdrop-blur-sm">
           <h3 className="mt-0 text-lg font-semibold text-orange-600">Contact Us</h3>
@@ -134,7 +130,7 @@ const SignupPage = () => {
                 placeholder="you@example.com"
               />
             </div>
-            {/* ... (Password, Confirm Password inputs are the same) ... */}
+            
             <div>
               <label className="mb-1 block font-medium text-gray-700">Password</label>
               <input
@@ -146,6 +142,7 @@ const SignupPage = () => {
                 placeholder="Enter password"
               />
             </div>
+            
             <div>
               <label className="mb-1 block font-medium text-gray-700">
                 Confirm Password
@@ -183,11 +180,11 @@ const SignupPage = () => {
           <div className="mt-4 text-center">
             <h3 className="text-xl font-semibold text-green-700">Success!</h3>
             <p className="mt-2 font-medium text-gray-700">
-              A verification link has been sent to{" "}
+              A verification link/OTP has been sent to{" "}
               <span className="font-bold text-orange-600">{email}</span>.
             </p>
             <p className="mt-2 text-sm text-gray-500">
-              Please check your inbox (and spam folder) and click the link to verify your account.
+              Please check your inbox (and spam folder) to verify your account before logging in.
             </p>
             <button
               onClick={() => navigate("/login")}

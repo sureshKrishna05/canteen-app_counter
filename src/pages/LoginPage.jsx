@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import bgImage from "../assets/login-bg.jpg";
 import logo from "../assets/Logo.jpg";
-import { login, logout } from "../database/firestoreService"; // <-- IMPORT REAL FUNCTIONS
+// 🟢 FIXED: Import the login function from your new Supabase service
+import { login } from "../database/supabaseService"; 
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -14,7 +15,7 @@ const LoginPage = () => {
   const [showContact, setShowContact] = useState(false);
   const navigate = useNavigate();
 
-  // --- THIS IS THE UPDATED FIREBASE LOGIN LOGIC ---
+  // --- UPDATED SUPABASE LOGIN LOGIC ---
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) {
@@ -24,42 +25,27 @@ const LoginPage = () => {
     setError("");
     setLoading(true);
 
-    console.log("Attempting login with:", email); // Good for debugging
+    console.log("Attempting login with:", email);
 
-    // --- REAL FIREBASE LOGIN ---
     try {
-      const userCredential = await login(email, password);
-      const user = userCredential.user;
-
-      // --- !! VERIFICATION CHECK !! ---
-      if (!user.emailVerified) {
-        // If not verified, log them out immediately and show an error.
-        await logout();
-        setError(
-          "Your email is not verified. Please check your inbox for the link."
-        );
-      }
-      // If email IS verified, we do nothing.
-      // The onAuthStateChanged listener in AuthContext
-      // and the router in App.jsx will handle the redirect.
-      
+      // 🟢 REAL SUPABASE LOGIN
+      await login(email, password);
+      // If successful, the AuthContext listener will automatically 
+      // detect the session change and redirect you to the Dashboard!
     } catch (err) {
-      // Handle Firebase errors
-      if (
-        err.code === "auth/wrong-password" ||
-        err.code === "auth/user-not-found" ||
-        err.code === "auth/invalid-credential"
-      ) {
+      // Safely handle Supabase errors
+      if (err.message?.includes("Email not confirmed")) {
+        setError("Your email is not verified. Please check your inbox for the link/OTP.");
+      } else if (err.message?.includes("Invalid login credentials")) {
         setError("Invalid credentials. Please try again.");
       } else {
-        setError("Failed to log in. Please try again later.");
+        setError(err.message || "Failed to log in. Please try again later.");
       }
-      console.error("Login error:", err.code, err.message);
+      console.error("Login error:", err);
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false); 
     }
   };
-  // --- END OF UPDATED LOGIC ---
 
   return (
     <div
@@ -117,7 +103,7 @@ const LoginPage = () => {
               href="mailto:smartcanteen29@gmail.com"
               className="font-bold text-orange-600 no-underline"
             >
-              smartcanteen2Example.com
+              smartcanteen29@gmail.com
             </a>
           </p>
         </div>

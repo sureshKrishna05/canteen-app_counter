@@ -1,5 +1,6 @@
 import React from "react";
-import { logout } from "../database/firestoreService";
+// 🟢 FIXED: Changed from firestoreService to supabaseService
+import { logout } from "../database/supabaseService";
 import { useNavigate } from "react-router-dom";
 
 const DashboardPage = () => {
@@ -67,7 +68,11 @@ const DashboardPage = () => {
         {boxes.map((box, idx) => (
           <div
             key={idx}
-            className="relative h-52 rounded-2xl flex flex-col items-center justify-center text-center overflow-hidden transform transition hover:scale-105 hover:shadow-2xl"
+            className="relative h-52 rounded-2xl flex flex-col items-center justify-center text-center overflow-hidden transform transition hover:scale-105 hover:shadow-2xl cursor-pointer"
+            onClick={() => {
+              // Later, we can add navigation here. 
+              // Example: if (box.title === "Today’s Menu") navigate("/menu");
+            }}
             style={{
               background: "linear-gradient(135deg, #FFF7ED, #FFD4A5)",
               border: "3px solid #8B0000",
