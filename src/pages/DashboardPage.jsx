@@ -104,8 +104,7 @@ const DashboardPage = () => {
             key={idx}
             className="relative h-52 rounded-2xl flex flex-col items-center justify-center text-center overflow-hidden transform transition hover:scale-105 hover:shadow-2xl cursor-pointer"
             onClick={() => {
-              // Later, we can add navigation here. 
-              // Example: if (box.title === "Today’s Menu") navigate("/menu");
+                handleNavigation(box.title)
             }}
             style={{
               background: "linear-gradient(135deg, #FFF7ED, #FFD4A5)",
