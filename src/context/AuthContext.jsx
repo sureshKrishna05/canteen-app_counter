@@ -1,23 +1,35 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../database/supabaseClient";
+import { getMyProfile } from "../database/supabaseService";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [profile, setProfile] = useState(null);   // role, canteen_id, college_id
   const [loading, setLoading] = useState(true);
 
+  const loadProfile = async (user) => {
+    if (!user) { setProfile(null); return; }
+    try {
+      const p = await getMyProfile();
+      setProfile(p);
+    } catch {
+      setProfile(null);
+    }
+  };
+
   useEffect(() => {
-    // 1. Get initial session on load
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setCurrentUser(session?.user ?? null);
+      await loadProfile(session?.user ?? null);
       setLoading(false);
     });
 
-    // 2. Listen for auth changes (login, logout, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setCurrentUser(session?.user ?? null);
+        await loadProfile(session?.user ?? null);
         setLoading(false);
       }
     );
@@ -25,12 +37,12 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const value = { currentUser, loading };
+  const value = { currentUser, profile, loading };
 
   if (loading) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-orange-500"></div>
+      <div className="flex min-h-screen w-full items-center justify-center bg-orange-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-orange-500" />
       </div>
     );
   }

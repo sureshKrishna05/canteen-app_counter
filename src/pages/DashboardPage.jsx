@@ -1,139 +1,127 @@
-import React from "react";
-// 🟢 FIXED: Changed from firestoreService to supabaseService
-import { logout } from "../database/supabaseService";
+import React, { useState, useEffect } from "react";
+import { logout, getMyCanteen, toggleCanteenStatus } from "../database/supabaseService";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
+
+  const [canteen, setCanteen] = useState(null);
+  const [toggling, setToggling] = useState(false);
+
+  // Load real canteen data
+  useEffect(() => {
+    if (profile?.canteen_id) {
+      getMyCanteen(profile.canteen_id)
+        .then(setCanteen)
+        .catch(console.error);
+    }
+  }, [profile]);
 
   const handleLogout = async () => {
+    try { await logout(); navigate("/login"); }
+    catch (e) { console.error(e); }
+  };
+
+  const handleToggleCanteen = async () => {
+    if (!canteen) return;
+    setToggling(true);
     try {
-      await logout();
-      navigate("/login");
-    } catch (error) {
-      console.error("Failed to log out:", error);
+      const updated = await toggleCanteenStatus(canteen.id, !canteen.is_open);
+      setCanteen(updated);
+    } catch (e) {
+      alert("Failed to update canteen status: " + e.message);
+    } finally {
+      setToggling(false);
     }
   };
 
   const boxes = [
-    { emoji: "📦", title: "Orders", desc: "View all customer orders" },
-    { emoji: "🍳", title: "Processing Orders", desc: "Orders currently being prepared" },
-    { emoji: "✅", title: "Ready Orders", desc: "Orders ready for delivery" },
-    { emoji: "🚚", title: "Delivered Orders", desc: "Completed and served orders" },
-    { emoji: "🍽️", title: "Today’s Menu", desc: "Manage and update daily menu items" },
-    { emoji: "🔔", title: "Notifications", desc: "View alerts and recent updates" },
+    { emoji: "📦", title: "New Orders",         desc: "Incoming paid orders to accept",   path: "/orders",     color: "from-yellow-400 to-orange-400" },
+    { emoji: "🍳", title: "Processing Orders",   desc: "Orders currently being prepared",  path: "/processing", color: "from-blue-400 to-cyan-400" },
+    { emoji: "✅", title: "Ready Orders",         desc: "Orders ready for pickup",          path: "/ready",      color: "from-green-400 to-emerald-400" },
+    { emoji: "🚚", title: "Delivered Orders",     desc: "Completed and served orders",      path: "/delivered",  color: "from-purple-400 to-violet-400" },
+    { emoji: "🍽️", title: "Menu Management",     desc: "Add / edit / remove menu items",   path: "/menu",       color: "from-pink-400 to-rose-400" },
+    { emoji: "📊", title: "Today's Summary",      desc: "Orders count and revenue",         path: "/summary",    color: "from-amber-400 to-yellow-400" },
   ];
 
-  // ---------------------------------------
-  // Navigation Handler using SWITCH-CASE
-  // ---------------------------------------
-  const handleNavigation = (title) => {
-    switch (title) {
-      case "Orders":
-        navigate("/orders");
-        break;
-
-      case "Processing Orders":
-        navigate("/processing");
-        break;
-
-      case "Ready Orders":
-        navigate("/ready");
-        break;
-
-      case "Delivered Orders":
-        navigate("/delivered");
-        break;
-
-      case "Today’s Menu":
-        alert("Menu Management page not created yet.");
-        break;
-
-      case "Notifications":
-        alert("Notifications page not created yet.");
-        break;
-
-      default:
-        console.warn("Unknown dashboard box clicked:", title);
-    }
-  };
-
   return (
-    <div
-      className="p-6 flex flex-col gap-6 min-h-screen"
-      style={{
-        background: "#FFB86C",
-        color: "#1F2937",
-      }}
-    >
-      {/* Glass-like title bar */}
-      <header
-        className="flex items-center justify-between p-4 rounded-xl shadow-lg relative overflow-hidden"
-        style={{
-          background: "rgba(255, 255, 255, 0.15)",
-          backdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.3)",
-        }}
-      >
-        {/* Shine effect (static, no animation) */}
-        <div
-          className="absolute top-0 left-0 w-full h-full pointer-events-none"
-          style={{
-            background:
-              "linear-gradient(120deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0.25) 100%)",
-            transform: "skewX(-20deg)",
-          }}
-        />
+    <div className="p-6 flex flex-col gap-6 min-h-screen" style={{ background: "#FFB86C" }}>
 
-        <h1 className="text-2xl font-extrabold text-white drop-shadow-lg flex items-center gap-2 relative z-10">
-          🍴 <span>Canteen Dashboard</span>
-        </h1>
+      {/* Header */}
+      <header className="flex items-center justify-between p-4 rounded-xl shadow-lg relative overflow-hidden"
+        style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.3)" }}>
+        <div>
+          <h1 className="text-2xl font-extrabold text-white drop-shadow flex items-center gap-2">
+            🍴 Canteen Counter
+          </h1>
+          {canteen && (
+            <p className="text-white/80 text-sm mt-0.5">
+              {canteen.name} — 
+              <span className={`ml-1 font-semibold ${canteen.is_open ? "text-green-200" : "text-red-200"}`}>
+                {canteen.is_open ? "● Open" : "● Closed"}
+              </span>
+            </p>
+          )}
+          {profile && (
+            <p className="text-white/60 text-xs mt-0.5">
+              Logged in as: {profile.full_name || "Admin"} ({profile.role})
+            </p>
+          )}
+        </div>
 
-        <button
-          onClick={handleLogout}
-          className="relative z-10 rounded-md bg-gradient-to-r from-orange-500 to-orange-400 px-5 py-2 font-semibold text-white shadow-md hover:shadow-lg active:scale-95 transition"
-        >
-          Log Out
-        </button>
+        <div className="flex gap-3">
+          {/* ✅ Real canteen open/close toggle */}
+          {canteen && (
+            <button
+              onClick={handleToggleCanteen}
+              disabled={toggling}
+              className={`px-4 py-2 rounded-lg font-semibold text-white text-sm transition ${
+                canteen.is_open
+                  ? "bg-red-500 hover:bg-red-600"
+                  : "bg-green-500 hover:bg-green-600"
+              } disabled:opacity-50`}
+            >
+              {toggling ? "..." : canteen.is_open ? "Close Canteen" : "Open Canteen"}
+            </button>
+          )}
+          <button onClick={handleLogout}
+            className="rounded-md bg-gradient-to-r from-orange-500 to-orange-400 px-5 py-2 font-semibold text-white shadow-md hover:shadow-lg active:scale-95 transition">
+            Log Out
+          </button>
+        </div>
       </header>
 
-      {/* Dashboard Sections */}
-      <main className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {/* No canteen assigned warning */}
+      {!profile?.canteen_id && (
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+          ⚠️ Your account is not assigned to a canteen yet. Ask your admin to assign you a canteen.
+        </div>
+      )}
+
+      {/* Dashboard Grid */}
+      <main className="mt-4 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {boxes.map((box, idx) => (
           <div
             key={idx}
-            className="relative h-52 rounded-2xl flex flex-col items-center justify-center text-center overflow-hidden transform transition hover:scale-105 hover:shadow-2xl cursor-pointer"
-            onClick={() => {
-                handleNavigation(box.title)
-            }}
-            style={{
-              background: "linear-gradient(135deg, #FFF7ED, #FFD4A5)",
-              border: "3px solid #8B0000",
-              boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-            }}
+            onClick={() => navigate(box.path)}
+            className={`relative h-48 rounded-2xl flex flex-col items-center justify-center text-center
+              overflow-hidden transform transition hover:scale-105 hover:shadow-2xl cursor-pointer
+              bg-gradient-to-br ${box.color} shadow-lg`}
           >
-            {/* Static light frame */}
-            <div
-              className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-36 h-3 rounded-full blur-lg opacity-70"
-              style={{
-                background:
-                  "radial-gradient(closest-side, rgba(255,165,0,0.4), transparent)",
-              }}
-            />
-
-            <div className="relative z-10 flex flex-col items-center justify-center">
-              <div className="w-16 h-16 border border-orange-300 rounded-lg mb-3 flex items-center justify-center bg-orange-50 text-3xl">
-                {box.emoji}
-              </div>
-              <h2 className="text-xl font-semibold text-orange-700">{box.title}</h2>
-              <p className="text-gray-700">{box.desc}</p>
+            <div className="absolute inset-0 bg-white/10 rounded-2xl" />
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="text-4xl mb-3">{box.emoji}</div>
+              <h2 className="text-xl font-bold text-white drop-shadow">{box.title}</h2>
+              <p className="text-white/80 text-sm mt-1 px-4">{box.desc}</p>
             </div>
           </div>
         ))}
       </main>
 
-      <footer className="mt-10 text-center text-orange-800 text-sm opacity-80">
-        © {new Date().getFullYear()} Canteen Management — All Rights Reserved
+      <footer className="mt-auto text-center text-orange-800 text-sm opacity-70">
+        © {new Date().getFullYear()} Smart Canteen Counter — All Rights Reserved
       </footer>
     </div>
   );
