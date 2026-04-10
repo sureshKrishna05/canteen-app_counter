@@ -20,31 +20,61 @@ export const logout = async () => {
 
 // ─── Profile ─────────────────────────────────────────────────────
 export const getMyProfile = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  try {
+    // 1. Safely check the current user session
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    // If the token is expired/invalid, clear it safely
+    if (authError || !user) {
+      await supabase.auth.signOut(); 
+      return null;
+    }
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .maybeSingle();
+    // 2. Fetch the profile data
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
 
-  if (error) throw error;
-  return data;
+    // Catch database/RLS errors without crashing
+    if (error) {
+      console.error("Supabase Profile Error:", error.message);
+      return null; 
+    }
+    
+    return data;
+  } catch (err) {
+    // Catch any other unexpected network crashes
+    console.error("Crash prevented in getMyProfile:", err);
+    return null;
+  }
 };
 
 // ─── Canteen ─────────────────────────────────────────────────────
 export const getMyCanteen = async (canteenId) => {
-  const { data, error } = await supabase
-    .from("canteens")
-    .select("*")
-    .eq("id", canteenId)
-    .maybeSingle();
-  if (error) throw error;
-  return data;
+  if (!canteenId) return null; // Safety guard!
+
+  try {
+    const { data, error } = await supabase
+      .from("canteens")
+      .select("*")
+      .eq("id", canteenId)
+      .maybeSingle();
+      
+    if (error) {
+      console.error("Error fetching canteen:", error.message);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error("Crash prevented in getMyCanteen:", err);
+    return null;
+  }
 };
 
 export const toggleCanteenStatus = async (canteenId, isOpen) => {
+  if (!canteenId) throw new Error("No canteen ID provided");
   const { data, error } = await supabase
     .from("canteens")
     .update({ is_open: isOpen })
@@ -57,14 +87,25 @@ export const toggleCanteenStatus = async (canteenId, isOpen) => {
 
 // ─── Menu Items ──────────────────────────────────────────────────
 export const getMenuItems = async (canteenId) => {
-  const { data, error } = await supabase
-    .from("menu_items")
-    .select("*")
-    .eq("canteen_id", canteenId)
-    .order("category")
-    .order("name");
-  if (error) throw error;
-  return data ?? [];
+  if (!canteenId) return []; // Safety guard!
+
+  try {
+    const { data, error } = await supabase
+      .from("menu_items")
+      .select("*")
+      .eq("canteen_id", canteenId)
+      .order("category")
+      .order("name");
+      
+    if (error) {
+      console.error("Error fetching menu items:", error.message);
+      return [];
+    }
+    return data ?? [];
+  } catch (err) {
+    console.error("Crash prevented in getMenuItems:", err);
+    return [];
+  }
 };
 
 export const addMenuItem = async (item) => {
@@ -108,29 +149,39 @@ export const toggleMenuItemAvailability = async (id, isAvailable) => {
 
 // Fetch orders for a canteen filtered by one or more statuses
 export const getOrdersByStatus = async (canteenId, statuses) => {
-  const { data, error } = await supabase
-    .from("orders")
-    .select(`
-      id,
-      status,
-      payment_status,
-      total_amount,
-      created_at,
-      student_id,
-      profiles:student_id ( full_name ),
-      order_items (
-        id,
-        quantity,
-        price_at_time,
-        menu_items ( id, name )
-      )
-    `)
-    .eq("canteen_id", canteenId)
-    .in("status", statuses)
-    .order("created_at", { ascending: false });
+  if (!canteenId) return []; // Safety guard!
 
-  if (error) throw error;
-  return data ?? [];
+  try {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(`
+        id,
+        status,
+        payment_status,
+        total_amount,
+        created_at,
+        student_id,
+        profiles:student_id ( full_name ),
+        order_items (
+          id,
+          quantity,
+          price_at_time,
+          menu_items ( id, name )
+        )
+      `)
+      .eq("canteen_id", canteenId)
+      .in("status", statuses)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching orders:", error.message);
+      return [];
+    }
+    return data ?? [];
+  } catch (err) {
+    console.error("Crash prevented in getOrdersByStatus:", err);
+    return [];
+  }
 };
 
 // Update order status
@@ -147,6 +198,8 @@ export const updateOrderStatus = async (orderId, newStatus) => {
 
 // Subscribe to real-time order changes for a canteen
 export const subscribeToOrders = (canteenId, onUpdate) => {
+  if (!canteenId) return { unsubscribe: () => {} }; // Safety guard!
+  
   return supabase
     .channel(`orders:canteen:${canteenId}`)
     .on(
