@@ -1,10 +1,14 @@
-## 🚀 Getting Started  
+# 🍽️ Canteen App
 
-### Prerequisites  
-- [Node.js](https://nodejs.org/) >= 16  
-- npm or yarn  
+## 🚀 Getting Started
 
-### Installation  
+### Prerequisites
+
+* [Node.js](https://nodejs.org/) >= 16
+* npm or yarn
+
+### Installation
+
 ```bash
 # Clone the repo
 git clone https://github.com/yourusername/billing-app.git
@@ -14,23 +18,27 @@ cd canteen-app_counter
 npm install
 ```
 
-### Development  
-Run in development mode with hot reload:  
+### Development
+
+Run in development mode with hot reload:
+
 ```bash
 npm run dev
 ```
 
-### Build  
-Package the app for your platform:  
+### Build
+
+Package the app for your platform:
+
 ```bash
 npm run build
 ```
 
-Build outputs will be available under `dist/`.  
+Build outputs will be available under `dist/`.
 
 ---
 
-## 📂 Project Structure  
+## 📂 Project Structure
 
 ```
 CanteenApp/
