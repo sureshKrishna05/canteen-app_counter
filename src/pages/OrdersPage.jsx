@@ -11,16 +11,22 @@ const STATUS_BADGE = {
 
 const OrdersPage = () => {
   const { profile } = useAuth();
+  const canteenId = profile?.canteen_id; // ✅ Moved UP to use in useState
+
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!canteenId); // ✅ Starts false if no ID
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const canteenId = profile?.canteen_id;
-
   const loadOrders = useCallback(async () => {
-    if (!canteenId) return;
+    // ✅ Don't exit early without stopping the spinner!
+    if (!canteenId) {
+      setLoading(false); 
+      return;
+    }
+    
+    setLoading(true); // ✅ Start spinner when fetching
     try {
       // Show new orders: paid (awaiting acceptance) and created
       const data = await getOrdersByStatus(canteenId, ["paid", "created"]);
@@ -28,7 +34,7 @@ const OrdersPage = () => {
     } catch (e) {
       setError(e.message);
     } finally {
-      setLoading(false);
+      setLoading(false); // ✅ Always guaranteed to stop
     }
   }, [canteenId]);
 

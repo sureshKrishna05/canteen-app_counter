@@ -5,22 +5,30 @@ import { getOrdersByStatus, updateOrderStatus, subscribeToOrders } from "../data
 
 const ReadyOrdersPage = () => {
   const { profile } = useAuth();
+  const canteenId = profile?.canteen_id; // ✅ Moved UP to use in useState
+
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!canteenId); // ✅ Starts false if no ID
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
-
-  const canteenId = profile?.canteen_id;
+  const [error, setError] = useState("");
 
   const loadOrders = useCallback(async () => {
-    if (!canteenId) return;
+    // ✅ Don't exit early without stopping the spinner!
+    if (!canteenId) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true); // ✅ Start spinner when fetching
     try {
       const data = await getOrdersByStatus(canteenId, ["ready"]);
       setOrders(data);
     } catch (e) {
       console.error(e);
+      setError(e.message);
     } finally {
-      setLoading(false);
+      setLoading(false); // ✅ Always guaranteed to stop
     }
   }, [canteenId]);
 
@@ -52,6 +60,18 @@ const ReadyOrdersPage = () => {
   return (
     <div className="p-6 min-h-screen">
       <HeaderBar title="Ready Orders" icon="✅" actionType="Back" />
+
+      {!canteenId && (
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg mb-4">
+          ⚠️ No canteen assigned to your account.
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+          Error: {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center items-center h-48">

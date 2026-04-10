@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+ import React, { useState, useEffect, useCallback } from "react";
 import { logout, getMyCanteen, toggleCanteenStatus } from "../database/supabaseService";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -6,22 +6,42 @@ import { useAuth } from "../context/AuthContext";
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
+  
+  const canteenId = profile?.canteen_id; // ✅ Moved UP to use in state/callbacks
 
   const [canteen, setCanteen] = useState(null);
+  const [loadingCanteen, setLoadingCanteen] = useState(!!canteenId); // ✅ Starts false if no ID
   const [toggling, setToggling] = useState(false);
 
-  // Load real canteen data
-  useEffect(() => {
-    if (profile?.canteen_id) {
-      getMyCanteen(profile.canteen_id)
-        .then(setCanteen)
-        .catch(console.error);
+  // ✅ Robust fetch pattern matching the other pages
+  const loadCanteen = useCallback(async () => {
+    if (!canteenId) {
+      setLoadingCanteen(false);
+      return;
     }
-  }, [profile]);
+    
+    setLoadingCanteen(true);
+    try {
+      const data = await getMyCanteen(canteenId);
+      setCanteen(data);
+    } catch (e) {
+      console.error("Failed to load canteen:", e);
+    } finally {
+      setLoadingCanteen(false); // ✅ Guaranteed to stop loading
+    }
+  }, [canteenId]);
+
+  useEffect(() => {
+    loadCanteen();
+  }, [loadCanteen]);
 
   const handleLogout = async () => {
-    try { await logout(); navigate("/login"); }
-    catch (e) { console.error(e); }
+    try { 
+      await logout(); 
+      navigate("/login"); 
+    } catch (e) { 
+      console.error(e); 
+    }
   };
 
   const handleToggleCanteen = async () => {
@@ -56,14 +76,17 @@ const DashboardPage = () => {
           <h1 className="text-2xl font-extrabold text-white drop-shadow flex items-center gap-2">
             🍴 Canteen Counter
           </h1>
-          {canteen && (
+          {loadingCanteen ? (
+            <p className="text-white/80 text-sm mt-0.5">Loading canteen data...</p>
+          ) : canteen ? (
             <p className="text-white/80 text-sm mt-0.5">
               {canteen.name} — 
               <span className={`ml-1 font-semibold ${canteen.is_open ? "text-green-200" : "text-red-200"}`}>
                 {canteen.is_open ? "● Open" : "● Closed"}
               </span>
             </p>
-          )}
+          ) : null}
+          
           {profile && (
             <p className="text-white/60 text-xs mt-0.5">
               Logged in as: {profile.full_name || "Admin"} ({profile.role})
@@ -73,7 +96,7 @@ const DashboardPage = () => {
 
         <div className="flex gap-3">
           {/* ✅ Real canteen open/close toggle */}
-          {canteen && (
+          {canteen && !loadingCanteen && (
             <button
               onClick={handleToggleCanteen}
               disabled={toggling}
@@ -94,7 +117,7 @@ const DashboardPage = () => {
       </header>
 
       {/* No canteen assigned warning */}
-      {!profile?.canteen_id && (
+      {!canteenId && !loadingCanteen && (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg text-sm">
           ⚠️ Your account is not assigned to a canteen yet. Ask your admin to assign you a canteen.
         </div>

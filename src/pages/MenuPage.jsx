@@ -16,32 +16,38 @@ const EMPTY_FORM = {
   price: "",
   category: "Snacks",
   description: "",
+  image_url: "", // Added Image URL
   prep_time_mins: 10,
   is_available: true,
 };
 
 const MenuPage = () => {
   const { profile } = useAuth();
+  const canteenId = profile?.canteen_id; 
+
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!canteenId); 
   const [showForm, setShowForm] = useState(false);
-  const [editItem, setEditItem] = useState(null); // null = add mode
+  const [editItem, setEditItem] = useState(null); 
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [filterCat, setFilterCat] = useState("All");
-
-  const canteenId = profile?.canteen_id;
-
-  const loadItems = useCallback(async () => {
-    if (!canteenId) return;
+const loadItems = useCallback(async () => {
+    // ✅ YOUR FIX: Don't exit early without stopping the spinner!
+    if (!canteenId) { 
+      setLoading(false); 
+      return; 
+    }
+    
+    setLoading(true); // ✅ Ensure spinner runs when fetching
     try {
       const data = await getMenuItems(canteenId);
       setItems(data);
     } catch (e) {
       setError(e.message);
     } finally {
-      setLoading(false);
+      setLoading(false); // ✅ Always guaranteed to stop
     }
   }, [canteenId]);
 
@@ -60,6 +66,7 @@ const MenuPage = () => {
       price: item.price,
       category: item.category || "Snacks",
       description: item.description || "",
+      image_url: item.image_url || "", // Load Image URL
       prep_time_mins: item.prep_time_mins || 10,
       is_available: item.is_available,
     });
@@ -74,25 +81,23 @@ const MenuPage = () => {
     setSaving(true);
     setError("");
     try {
+      const payload = {
+        name: form.name.trim(),
+        price: parseFloat(form.price),
+        category: form.category,
+        description: form.description,
+        image_url: form.image_url.trim() || null, // Save Image URL
+        prep_time_mins: parseInt(form.prep_time_mins),
+        is_available: form.is_available,
+      };
+
       if (editItem) {
-        const updated = await updateMenuItem(editItem.id, {
-          name: form.name.trim(),
-          price: parseFloat(form.price),
-          category: form.category,
-          description: form.description,
-          prep_time_mins: parseInt(form.prep_time_mins),
-          is_available: form.is_available,
-        });
+        const updated = await updateMenuItem(editItem.id, payload);
         setItems(prev => prev.map(i => i.id === updated.id ? updated : i));
       } else {
         const created = await addMenuItem({
           canteen_id: canteenId,
-          name: form.name.trim(),
-          price: parseFloat(form.price),
-          category: form.category,
-          description: form.description,
-          prep_time_mins: parseInt(form.prep_time_mins),
-          is_available: form.is_available,
+          ...payload
         });
         setItems(prev => [...prev, created]);
       }
@@ -186,7 +191,21 @@ const MenuPage = () => {
                 item.is_available ? "border-green-400" : "border-gray-300 opacity-70"
               }`}
             >
-              <div className="flex justify-between items-start">
+              <div className="flex gap-4 items-start">
+                {/* Thumbnail Image */}
+                {item.image_url ? (
+                  <img 
+                    src={item.image_url} 
+                    alt={item.name} 
+                    className="w-16 h-16 rounded-lg object-cover bg-gray-100 shadow-sm"
+                    onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=No+Image'; }}
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-lg bg-orange-50 flex items-center justify-center text-orange-300 text-2xl shadow-inner">
+                    🍽️
+                  </div>
+                )}
+                
                 <div className="flex-1">
                   <h3 className="font-bold text-gray-800 text-base">{item.name}</h3>
                   <p className="text-xs text-orange-500 font-medium mt-0.5">{item.category}</p>
@@ -292,6 +311,27 @@ const MenuPage = () => {
                 >
                   {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                <input
+                  type="url"
+                  value={form.image_url}
+                  onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
+                />
+                {form.image_url && (
+                  <div className="mt-2">
+                    <img 
+                      src={form.image_url} 
+                      alt="Preview" 
+                      className="h-20 rounded object-cover border"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
