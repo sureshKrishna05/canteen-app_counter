@@ -10,7 +10,7 @@ import ProcessingOrdersPage from "./pages/ProcessingOrdersPage";
 import ReadyOrdersPage from "./pages/ReadyOrdersPage";
 import DeliveredOrdersPage from "./pages/DeliveredOrdersPage";
 import MenuPage from "./pages/MenuPage";
-
+import Waste from "./pages/Waste";
 function App() {
   const { currentUser, loading } = useAuth();
 
@@ -45,6 +45,7 @@ function App() {
         <Route path="/ready" element={<ProtectedRoute><ReadyOrdersPage /></ProtectedRoute>} />
         <Route path="/delivered" element={<ProtectedRoute><DeliveredOrdersPage /></ProtectedRoute>} />
         <Route path="/menu" element={<ProtectedRoute><MenuPage /></ProtectedRoute>} />
+        <Route path="/waste" element={<ProtectedRoute><Waste /></ProtectedRoute>} />
 
         <Route
           path="*"
