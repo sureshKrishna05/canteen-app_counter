@@ -214,3 +214,24 @@ export const subscribeToOrders = (canteenId, onUpdate) => {
     )
     .subscribe();
 };
+export const getDustbinLogs = async (canteenId) => {
+  if (!canteenId) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from("dustbin_logs")
+      .select("*")
+      .eq("canteen_id", canteenId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching dustbin logs:", error.message);
+      return [];
+    }
+
+    return data ?? [];
+  } catch (err) {
+    console.error("Crash prevented in getDustbinLogs:", err);
+    return [];
+  }
+};
